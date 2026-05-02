@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Custom Event</title>
+
+  <!-- Goldcast Registration Widget -->
+  <script src="https://dnf20ypvrc856.cloudfront.net/embed.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & Tokens ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #111118;
+      --border:    rgba(255,255,255,0.08);
+      --gold:      #c9a84c;
+      --gold-dim:  #8a6b2a;
+      --gold-glow: rgba(201,168,76,0.18);
+      --text:      #e8e3d8;
+      --muted:     #7a7468;
+      --font-display: 'Cormorant Garamond', serif;
+      --font-body:    'DM Sans', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise texture overlay ──────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.5;
+    }
+
+    /* ── Ambient orbs ───────────────────────────────────── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+      animation: drift 14s ease-in-out infinite alternate;
+    }
+    .orb-1 { width: 500px; height: 500px; background: rgba(201,168,76,0.07); top: -120px; right: -100px; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(100,80,180,0.06); bottom: -80px; left: -80px; animation-delay: -6s; }
+    @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,20px) scale(1.08); } }
+
+    /* ── Site wrapper ───────────────────────────────────── */
+    .site { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ── Header ─────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 48px;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      background: rgba(10,10,15,0.7);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--gold);
+    }
+    .logo span { color: var(--text); font-weight: 300; }
+
+    /* ── Tab Bar ─────────────────────────────────────────── */
+    nav.tabs {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+    }
+
+    .tab-btn {
+      position: relative;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 8px 22px;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.25s;
+    }
+    .tab-btn::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%) scaleX(0);
+      width: 70%;
+      height: 1px;
+      background: var(--gold);
+      transition: transform 0.3s ease;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--gold); }
+    .tab-btn.active::after { transform: translateX(-50%) scaleX(1); }
+
+    /* ── Tab Panels ─────────────────────────────────────── */
+    .panel { display: none; flex: 1; }
+    .panel.active { display: block; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ══════════════════════════════════════════════════════
+       TAB 1 — WELCOME
+    ══════════════════════════════════════════════════════ */
+    #panel-welcome {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      padding: 120px 48px 100px;
+      overflow: hidden;
+      text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid var(--gold-dim);
+      padding: 5px 16px;
+      border-radius: 2px;
+      margin-bottom: 28px;
+      animation: slideUp 0.6s ease both;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 7vw, 6rem);
+      font-weight: 300;
+      line-height: 1.08;
+      letter-spacing: -0.01em;
+      margin-bottom: 24px;
+      animation: slideUp 0.6s 0.1s ease both;
+    }
+    .hero h1 em { font-style: italic; color: var(--gold); }
+    .hero-sub {
+      max-width: 520px;
+      margin: 0 auto 48px;
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 300;
+      animation: slideUp 0.6s 0.2s ease both;
+    }
+    .hero-cta-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: slideUp 0.6s 0.3s ease both;
+    }
+    @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+    .btn-primary {
+      background: var(--gold);
+      color: #0a0a0f;
+      border: none;
+      padding: 13px 32px;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-primary:hover { background: #d9b85c; transform: translateY(-1px); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 13px 32px;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: border-color 0.2s, color 0.2s, transform 0.15s;
+    }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-1px); }
+
+    /* Decorative horizontal rule */
+    .hero-rule {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: center;
+      margin: 64px auto 0;
+      max-width: 280px;
+    }
+    .hero-rule span { flex: 1; height: 1px; background: var(--border); }
+    .hero-rule i { font-style: normal; color: var(--gold); font-size: 1.1rem; }
+
+    /* Stats strip */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-cell {
+      background: var(--bg);
+      padding: 36px 32px;
+      text-align: center;
+    }
+    .stat-cell .num {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      font-weight: 300;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .stat-cell .label {
+      margin-top: 6px;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* Feature cards */
+    .features-section { padding: 80px 48px; }
+    .section-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 40px;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .feature-card {
+      background: var(--surface);
+      padding: 36px 32px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.25s;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 2px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .feature-card:hover { background: #13131c; }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon {
+      width: 40px; height: 40px;
+      border: 1px solid var(--gold-dim);
+      border-radius: 2px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+      font-size: 1.2rem;
+    }
+    .feature-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 400;
+      margin-bottom: 10px;
+    }
+    .feature-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.7; }
+
+    /* Schedule teaser */
+    .schedule-section { padding: 0 48px 80px; }
+    .schedule-list { display: flex; flex-direction: column; gap: 1px; border: 1px solid var(--border); }
+    .schedule-item {
+      display: grid;
+      grid-template-columns: 100px 1fr auto;
+      align-items: center;
+      gap: 24px;
+      padding: 24px 28px;
+      background: var(--surface);
+      transition: background 0.2s;
+    }
+    .schedule-item:hover { background: #13131c; }
+    .schedule-time { font-family: var(--font-display); font-size: 1rem; color: var(--gold); white-space: nowrap; }
+    .schedule-title { font-size: 0.95rem; font-weight: 400; }
+    .schedule-tag {
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       TAB 2 — EVENT SPACE
+    ══════════════════════════════════════════════════════ */
+    #panel-event { padding: 0; }
+    .event-header {
+      padding: 40px 48px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+    .event-header h2 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 300;
+    }
+    .event-header p { color: var(--muted); font-size: 0.88rem; margin-top: 6px; }
+
+    .event-embed-wrapper {
+      padding: 32px 48px 48px;
+    }
+    .embed-box {
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      background: var(--surface);
+      min-height: 560px;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       TAB 3 — REGISTRATION SPACE
+    ══════════════════════════════════════════════════════ */
+    #panel-registration { padding: 0; }
+    .reg-layout {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      min-height: calc(100vh - 70px);
+    }
+    .reg-sidebar {
+      padding: 64px 48px;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .reg-sidebar h2 {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      font-weight: 300;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    .reg-sidebar h2 em { font-style: italic; color: var(--gold); }
+    .reg-sidebar p { color: var(--muted); font-size: 0.9rem; margin-bottom: 40px; line-height: 1.8; }
+    .reg-perks { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+    .reg-perks li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .reg-perks li::before {
+      content: '◆';
+      color: var(--gold);
+      font-size: 0.6rem;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+    .reg-form-panel {
+      padding: 48px 40px;
+      display: flex;
+      align-items: center;
+    }
+    .reg-form-inner { width: 100%; }
+    #goldcast-registration-form { width: 100%; min-height: 400px; }
+
+    /* ══════════════════════════════════════════════════════
+       TAB 4 — HUB SPACE
+    ══════════════════════════════════════════════════════ */
+    #panel-hub { padding: 0; }
+    .hub-header {
+      padding: 40px 48px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .hub-header h2 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 300;
+    }
+    .hub-header p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+    .hub-embed-wrapper { padding: 32px 48px 48px; }
+    .hub-embed-inner {
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    /* ── Footer ─────────────────────────────────────────── */
+    footer {
+      padding: 24px 48px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    footer .logo-sm { font-family: var(--font-display); color: var(--gold); font-size: 1rem; }
+
+    /* ── Responsive ─────────────────────────────────────── */
+    @media (max-width: 768px) {
+      header { padding: 16px 20px; }
+      .logo { font-size: 1.1rem; }
+      .tab-btn { padding: 8px 12px; font-size: 0.68rem; letter-spacing: 0.06em; }
+      .hero { padding: 72px 20px 60px; }
+      .features-section, .schedule-section { padding: 48px 20px; }
+      .event-header, .event-embed-wrapper, .hub-header, .hub-embed-wrapper { padding-left: 20px; padding-right: 20px; }
+      .reg-layout { grid-template-columns: 1fr; }
+      .reg-sidebar { padding: 40px 20px; }
+      .reg-form-panel { padding: 32px 20px; }
+      .stats-strip { grid-template-columns: repeat(2, 1fr); }
+      .schedule-item { grid-template-columns: 80px 1fr; }
+      .schedule-tag { display: none; }
+      footer { flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="site">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="logo">Event<span>Hub</span></div>
+    <nav class="tabs" role="tablist">
+      <button class="tab-btn active" role="tab" data-panel="welcome">Welcome</button>
+      <button class="tab-btn" role="tab" data-panel="event">Event Space</button>
+      <button class="tab-btn" role="tab" data-panel="registration">Registration</button>
+      <button class="tab-btn" role="tab" data-panel="hub">Hub Space</button>
+    </nav>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════
+       TAB 1 — WELCOME
+  ══════════════════════════════════════════════════════ -->
+  <section id="panel-welcome" class="panel active" role="tabpanel">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-eyebrow">Exclusively Curated · 2025</div>
+      <h1>Welcome to<br><em>The Custom Event</em></h1>
+      <p class="hero-sub">
+        An immersive experience crafted for visionaries. Join us for an extraordinary gathering of minds, ideas, and inspiration.
+      </p>
+      <div class="hero-cta-row">
+        <button class="btn-primary" onclick="switchTab('registration')">Register Now</button>
+        <button class="btn-outline" onclick="switchTab('event')">Watch Live</button>
+      </div>
+      <div class="hero-rule">
+        <span></span>
+        <i>✦</i>
+        <span></span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-strip">
+      <div class="stat-cell"><div class="num">12+</div><div class="label">Keynote Speakers</div></div>
+      <div class="stat-cell"><div class="num">3</div><div class="label">Days of Content</div></div>
+      <div class="stat-cell"><div class="num">2K+</div><div class="label">Attendees</div></div>
+      <div class="stat-cell"><div class="num">40+</div><div class="label">Sessions</div></div>
+    </div>
+
+    <!-- Features -->
+    <div class="features-section">
+      <div class="section-label">What to Expect</div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🎤</div>
+          <h3>Keynotes</h3>
+          <p>Hear from industry leaders shaping the future with bold ideas and transformative insights.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔗</div>
+          <h3>Networking</h3>
+          <p>Connect with peers, collaborators, and mentors in curated networking sessions.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🛠</div>
+          <h3>Workshops</h3>
+          <p>Hands-on sessions that turn ideas into actionable skills you can apply immediately.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🏆</div>
+          <h3>Awards</h3>
+          <p>Celebrating excellence and recognising trailblazers pushing the boundaries of possibility.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule teaser -->
+    <div class="schedule-section">
+      <div class="section-label">Schedule Highlights</div>
+      <div class="schedule-list">
+        <div class="schedule-item">
+          <div class="schedule-time">09:00 AM</div>
+          <div class="schedule-title">Opening Keynote — The Year Ahead</div>
+          <div class="schedule-tag">Main Stage</div>
+        </div>
+        <div class="schedule-item">
+          <div class="schedule-time">11:00 AM</div>
+          <div class="schedule-title">Panel: Innovation at Scale</div>
+          <div class="schedule-tag">Panel</div>
+        </div>
+        <div class="schedule-item">
+          <div class="schedule-time">02:00 PM</div>
+          <div class="schedule-title">Workshop: Building for Impact</div>
+          <div class="schedule-tag">Workshop</div>
+        </div>
+        <div class="schedule-item">
+          <div class="schedule-time">04:30 PM</div>
+          <div class="schedule-title">Closing Ceremony & Awards</div>
+          <div class="schedule-tag">Main Stage</div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════
+       TAB 2 — EVENT SPACE (Goldcast Embedded Event)
+  ══════════════════════════════════════════════════════ -->
+  <section id="panel-event" class="panel" role="tabpanel">
+    <div class="event-header">
+      <h2>Event Space</h2>
+      <p>Watch the live event stream and participate in real time.</p>
+    </div>
+    <div class="event-embed-wrapper">
+      <div class="embed-box">
+
+        <!-- ✅ GOLDCAST EMBEDDED EVENT WIDGET -->
+        <div id="gc-embedded-div"></div>
+        <script src="https://embedded.sdk.goldcast.io/embedded-sdk.js"></script>
+        <script>
+          const config = {
+            eventID: 'a97fb537-3e58-4623-b685-3fc65884a740',
+            embeddedServerUrl: 'https://embedded-server.goldcast.io',
+          };
+          const renderEmbeddedWidget = new window.GOLDCAST.RenderEmbeddedWidget(config);
+          renderEmbeddedWidget.init();
+        </script>
+        <!-- END GOLDCAST EMBEDDED EVENT WIDGET -->
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════
+       TAB 3 — REGISTRATION SPACE (Goldcast Registration Form)
+  ══════════════════════════════════════════════════════ -->
+  <section id="panel-registration" class="panel" role="tabpanel">
+    <div class="reg-layout">
+
+      <!-- Sidebar info -->
+      <div class="reg-sidebar">
+        <h2>Secure<br>Your <em>Spot</em></h2>
+        <p>Join thousands of attendees at the most anticipated event of the year. Fill in your details to reserve your place.</p>
+        <ul class="reg-perks">
+          <li>Full access to all keynotes and sessions</li>
+          <li>Exclusive networking opportunities</li>
+          <li>On-demand replay access post-event</li>
+          <li>Downloadable resources and materials</li>
+          <li>Certificate of participation</li>
+        </ul>
+      </div>
+
+      <!-- Registration form -->
+      <div class="reg-form-panel">
+        <div class="reg-form-inner">
+
+          <!-- ✅ GOLDCAST REGISTRATION WIDGET -->
+          <div id="goldcast-registration-form"></div>
+          <script>
+            (function initRegistration() {
+              function tryInit() {
+                if (window.GOLDCAST && window.GOLDCAST.RegistrationWidget) {
+                  new window.GOLDCAST.RegistrationWidget({
+                    event_id: 'a97fb537-3e58-4623-b685-3fc65884a740',
+                    mode: 'embed',
+                    containerSelector: '#goldcast-registration-form',
+                    backendUrl: 'https://backend.goldcast.io'
+                  });
+                } else {
+                  setTimeout(tryInit, 300);
+                }
+              }
+              tryInit();
+            })();
+          </script>
+          <!-- END GOLDCAST REGISTRATION WIDGET -->
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════
+       TAB 4 — HUB SPACE (Goldcast Hub Embed)
+  ══════════════════════════════════════════════════════ -->
+  <section id="panel-hub" class="panel" role="tabpanel">
+    <div class="hub-header">
+      <div>
+        <h2>Hub Space</h2>
+        <p>Explore on-demand content, replays, and event resources.</p>
+      </div>
+    </div>
+    <div class="hub-embed-wrapper">
+      <div class="hub-embed-inner">
+
+        <!-- ✅ GOLDCAST HUB EMBED -->
+        <div id="page-0ba328ea-cc2c-4aba-a2fb-2118d7b79236" style="aspect-ratio: 4 / 2.3; width: 100%;"></div>
+        <script src="https://eventhub.registration.goldcast.io/page-embedscript/0ba328ea-cc2c-4aba-a2fb-2118d7b79236"></script>
+        <!-- END GOLDCAST HUB EMBED -->
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <span class="logo-sm">EventHub</span>
+    <span>© 2025 Custom Event. All rights reserved.</span>
+    <span>Powered by Goldcast</span>
+  </footer>
+
+</div>
+
+<script>
+  // ── Tab switching logic ─────────────────────────────
+  const tabBtns  = document.querySelectorAll('.tab-btn');
+  const panels   = document.querySelectorAll('.panel');
+
+  function switchTab(panelId) {
+    tabBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.panel === panelId);
+    });
+    panels.forEach(panel => {
+      const isActive = panel.id === 'panel-' + panelId;
+      panel.classList.toggle('active', isActive);
+      panel.style.display = isActive ? 'block' : 'none';
+    });
+    // Show flex for welcome panel
+    if (panelId === 'welcome') {
+      document.getElementById('panel-welcome').style.display = 'flex';
+    }
+  }
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.panel));
+  });
+
+  // Initialise correct display states
+  panels.forEach(panel => {
+    panel.style.display = panel.classList.contains('active') ? 'flex' : 'none';
+  });
+  // Welcome is flex, others block when active
+  document.getElementById('panel-welcome').style.display = 'flex';
+</script>
+
+</body>
+</html>
