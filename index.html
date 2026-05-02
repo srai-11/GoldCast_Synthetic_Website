@@ -581,7 +581,20 @@
       <div class="embed-box">
 
         <!-- ✅ GOLDCAST EMBEDDED EVENT WIDGET -->
-        <div id="gc-embedded-div"></div>
+
+        
+    <div id="gc-embedded-div"></div>
+    <script src="https://embedded.sdk.goldcast.io/embedded-sdk.js"></script>
+    <script>
+        const config = {
+          eventID: '55b87a34-2931-445c-93c9-e7e8f0f3ab4c',
+          embeddedServerUrl: 'https://embedded-server.goldcast.io',
+        };
+        const renderEmbeddedWidget = new window.GOLDCAST.RenderEmbeddedWidget(config);
+        renderEmbeddedWidget.init();
+    </script>
+    
+        <!-- <div id="gc-embedded-div"></div>
         <script src="https://embedded.sdk.goldcast.io/embedded-sdk.js"></script>
         <script>
           const config = {
@@ -590,7 +603,7 @@
           };
           const renderEmbeddedWidget = new window.GOLDCAST.RenderEmbeddedWidget(config);
           renderEmbeddedWidget.init();
-        </script>
+        </script> -->
         <!-- END GOLDCAST EMBEDDED EVENT WIDGET -->
 
       </div>
