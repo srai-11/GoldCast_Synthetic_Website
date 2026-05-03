@@ -592,7 +592,7 @@
           const renderEmbeddedWidget = new window.GOLDCAST.RenderEmbeddedWidget(config);
           renderEmbeddedWidget.init();
         </script> -->
-        <!-- END GOLDCAST EMBEDDED EVENT WIDGET
+        <!-- END GOLDCAST EMBEDDED EVENT WIDGET  -->
 
       </div>
     </div>
@@ -601,51 +601,25 @@
   <!-- ══════════════════════════════════════════════════════
        TAB 3 — REGISTRATION SPACE (Goldcast Registration Form)
   ══════════════════════════════════════════════════════ -->
-  <section id="panel-registration" class="panel" role="tabpanel">
-    <div class="reg-layout">
-
-      <!-- Sidebar info -->
-      <div class="reg-sidebar">
-        <h2>Secure<br>Your <em>Spot</em></h2>
-        <p>Join thousands of attendees at the most anticipated event of the year. Fill in your details to reserve your place.</p>
-        <ul class="reg-perks">
-          <li>Full access to all keynotes and sessions</li>
-          <li>Exclusive networking opportunities</li>
-          <li>On-demand replay access post-event</li>
-          <li>Downloadable resources and materials</li>
-          <li>Certificate of participation</li>
-        </ul>
-      </div>
-
-      <!-- Registration form -->
-      <div class="reg-form-panel">
-        <div class="reg-form-inner">
-
-          <!-- ✅ GOLDCAST REGISTRATION WIDGET -->
-          <div id="goldcast-registration-form"></div>
-          <script>
-            (function initRegistration() {
-              function tryInit() {
-                if (window.GOLDCAST && window.GOLDCAST.RegistrationWidget) {
-                  new window.GOLDCAST.RegistrationWidget({
-                    event_id: 'a97fb537-3e58-4623-b685-3fc65884a740',
-                    mode: 'embed',
-                    containerSelector: '#goldcast-registration-form',
-                    backendUrl: 'https://backend.goldcast.io'
-                  });
-                } else {
-                  setTimeout(tryInit, 300);
-                }
-              }
-              tryInit();
-            })();
-          </script>
-          <!-- END GOLDCAST REGISTRATION WIDGET -->
-
-        </div>
-      </div>
+<section id="panel-registration" class="panel" role="tabpanel">
+  <div class="event-header">
+    <h2>Registration</h2>
+    <p>Fill in your details below to reserve your spot.</p>
+  </div>
+  <div class="event-embed-wrapper">
+    <div class="embed-box">
+      <div id="goldcast-registration-form"></div>
+      <script>
+        new window.GOLDCAST.RegistrationWidget({
+          event_id: 'a97fb537-3e58-4623-b685-3fc65884a740',
+          mode: 'embed',
+          containerSelector: '#goldcast-registration-form',
+          backendUrl: 'https://backend.goldcast.io'
+        });
+      </script>
     </div>
-  </section>
+  </div>
+</section>
 
   <!-- ══════════════════════════════════════════════════════
        TAB 4 — HUB SPACE (Goldcast Hub Embed)
@@ -661,7 +635,7 @@
       <div class="hub-embed-inner">
 
         <!-- ✅ GOLDCAST HUB EMBED -->
-        <div id="page-0ba328ea-cc2c-4aba-a2fb-2118d7b79236" style="aspect-ratio: 4 / 2.3; width: 100%;"></div>
+        <div id="page-0ba328ea-cc2c-4aba-a2fb-2118d7b79236" style="aspect-ratio: 4 / 2.3; width: 100%;" ></div>
         <script src="https://eventhub.registration.goldcast.io/page-embedscript/0ba328ea-cc2c-4aba-a2fb-2118d7b79236"></script>
         <!-- END GOLDCAST HUB EMBED -->
 
