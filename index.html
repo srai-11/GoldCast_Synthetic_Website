@@ -572,53 +572,33 @@
   <!-- ══════════════════════════════════════════════════════
        TAB 2 — EVENT SPACE (Goldcast Embedded Event)
   ══════════════════════════════════════════════════════ -->
-  <section id="panel-event" class="panel" role="tabpanel">
-    <div class="event-header">
-      <h2>Event Space</h2>
-      <p>Watch the live event stream and participate in real time.</p>
-    </div>
-    <div class="event-embed-wrapper">
-      <div class="embed-box">
-
-        <!-- ✅ GOLDCAST EMBEDDED EVENT WIDGET -->
-  
-        <div id="gc-embedded-div"></div>
-        <script src="https://embedded.sdk.goldcast.io/embedded-sdk.js"></script>
-        <script>
-          const config = {
-            eventID: 'a97fb537-3e58-4623-b685-3fc65884a740',
-            embeddedServerUrl: 'https://embedded-server.goldcast.io',
-          };
-          const renderEmbeddedWidget = new window.GOLDCAST.RenderEmbeddedWidget(config);
-          renderEmbeddedWidget.init();
-        </script> -->
-        <!-- END GOLDCAST EMBEDDED EVENT WIDGET  -->
-
-      </div>
-    </div>
-  </section>
+    
+<section id="panel-event" class="panel" role="tabpanel">
+  <div id="gc-embedded-div" style="width: 100%; height: calc(100vh - 70px);"></div>
+    <script src="https://embedded.sdk.goldcast.io/embedded-sdk.js"></script>
+    <script>
+        const config = {
+          eventID: 'a97fb537-3e58-4623-b685-3fc65884a740',
+          embeddedServerUrl: 'https://embedded-server.goldcast.io',
+        };
+        const renderEmbeddedWidget = new window.GOLDCAST.RenderEmbeddedWidget(config);
+        renderEmbeddedWidget.init();
+    </script>    
+</section>
 
   <!-- ══════════════════════════════════════════════════════
        TAB 3 — REGISTRATION SPACE (Goldcast Registration Form)
   ══════════════════════════════════════════════════════ -->
 <section id="panel-registration" class="panel" role="tabpanel">
-  <div class="event-header">
-    <h2>Registration</h2>
-    <p>Fill in your details below to reserve your spot.</p>
-  </div>
-  <div class="event-embed-wrapper">
-    <div class="embed-box">
-      <div id="goldcast-registration-form"></div>
-      <script>
-        new window.GOLDCAST.RegistrationWidget({
-          event_id: 'a97fb537-3e58-4623-b685-3fc65884a740',
-          mode: 'embed',
-          containerSelector: '#goldcast-registration-form',
-          backendUrl: 'https://backend.goldcast.io'
-        });
-      </script>
-    </div>
-  </div>
+  <div id="goldcast-registration-form" style="width: 100%; min-height: calc(100vh - 70px);"></div>
+  <script>
+    new window.GOLDCAST.RegistrationWidget({
+      event_id: 'a97fb537-3e58-4623-b685-3fc65884a740',
+      mode: 'embed',
+      containerSelector: '#goldcast-registration-form',
+      backendUrl: 'https://backend.goldcast.io'
+    });
+  </script>
 </section>
 
   <!-- ══════════════════════════════════════════════════════
